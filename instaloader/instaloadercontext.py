@@ -24,6 +24,7 @@ def copy_session(session: requests.Session, request_timeout: Optional[float] = N
     new = requests.Session()
     new.cookies = requests.utils.cookiejar_from_dict(requests.utils.dict_from_cookiejar(session.cookies))
     new.headers = session.headers.copy()  # type: ignore
+    new.proxies = session.proxies
     # Override default timeout behavior.
     # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
     new.request = partial(new.request, timeout=request_timeout)  # type: ignore
@@ -228,6 +229,7 @@ class InstaloaderContext:
         session.cookies = requests.utils.cookiejar_from_dict(sessiondata)
         session.headers.update(self._default_http_header())
         session.headers.update({'X-CSRFToken': session.cookies.get_dict()['csrftoken']})
+        session.proxies = self.proxy
         # Override default timeout behavior.
         # Need to silence mypy bug for this. See: https://github.com/python/mypy/issues/2427
         session.request = partial(session.request, timeout=self.request_timeout)  # type: ignore
@@ -283,6 +285,7 @@ class InstaloaderContext:
         # Add session's csrftoken cookie to session headers
         csrf_token = session.cookies.get_dict()['csrftoken']
         session.headers.update({'X-CSRFToken': csrf_token})
+        session.proxies = self.proxy
 
         self.do_sleep()
         # Workaround credits to pgrimaud.
